@@ -76,6 +76,7 @@ gf256 = [0,0,0,0,0,0,0,0] : take 255 gf256'
 
 --inverso de um elemento no corpo GF(256)
 inverso :: [Int] -> [Int]
+inverso [0,0,0,0,0,0,0,0] = [0,0,0,0,0,0,0,0]
 inverso [0,0,0,0,0,0,0,1] = [0,0,0,0,0,0,0,1]
 inverso x = gf256 !! (255 - (fromJust $ elemIndex x gf256))
 
@@ -91,6 +92,19 @@ sBox x = concat $ somaM v $ multM m $ transpose [inverso x]
                [0,1,1,1,1,1,0,0],
                [0,0,1,1,1,1,1,0],
                [0,0,0,1,1,1,1,1]]
+          v = [[1],[1],[0],[0],[0],[1],[1],[0]]
+
+--inverso sBox
+sBoxInv :: [Int] -> [Int]
+sBoxInv x = inverso $ concat $ multM m $ somaM v $ transpose [x]
+    where m = [[0,0,1,0,0,1,0,1],
+               [1,0,0,1,0,0,1,0],
+               [0,1,0,0,1,0,0,1],
+               [1,0,1,0,0,1,0,0],
+               [0,1,0,1,0,0,1,0],
+               [0,0,1,0,1,0,0,1],
+               [1,0,0,1,0,1,0,0],
+               [0,1,0,0,1,0,1,0]]
           v = [[1],[1],[0],[0],[0],[1],[1],[0]]
 
 --usados no mixColums:
@@ -116,6 +130,15 @@ multMDS x = multMP m x
         --v = [02, 03, 01, 01] em bytes
           v = [[0,0,0,0,0,0,1,0], [0,0,0,0,0,0,1,1], [0,0,0,0,0,0,0,1], [0,0,0,0,0,0,0,1]]
 
+--inverso multMDS
+multMDSinv :: [[[Int]]] -> [[[Int]]]
+multMDSinv x = multMP m x
+    where m = [v,
+               (desloc.desloc.desloc) v, 
+               (desloc.desloc) v,
+                desloc v]
+        --v = [14, 11, 13, 9] em bytes
+          v = [[0,0,0,0,1,1,1,0], [0,0,0,0,1,0,1,1], [0,0,0,0,1,1,0,1], [0,0,0,0,1,0,0,1]]
 
 --usados na chave (Rijndael key schedule) :
 --ideia em https://en.wikipedia.org/wiki/Rijndael_key_schedule
