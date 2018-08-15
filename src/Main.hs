@@ -28,10 +28,6 @@ shiftRowsInv (l0:l1:l2:l3:[]) = l0 : (desloc.desloc.desloc) l1 : (desloc.desloc)
 mixColumnsInv :: [[[Int]]] -> [[[Int]]]
 mixColumnsInv xss = transpose [head $ transpose $ multMDSinv $ col i xss | i <- [0..3]]
 
---addRoundKeyInv :: String -> Int -> [[[Int]]] -> [[[Int]]]
---addRoundKeyInv k i xss = zipWith (zipWith somaP) xss $ key !! i
---    where key = keyExp $ map char2bin k
-
 --algoritmo AES 128 bits
 --recebe chave e bloco de 128 bits no formato de uma matriz e encripta
 aes :: String -> [[[Int]]] -> [[[Int]]]
@@ -41,12 +37,16 @@ aes k b = ((addRoundKey k 10 ).shiftRows.subBytes.snd) $ last $ take 10 temp
           prox (i,b) = (i+1, ((addRoundKey k (i+1) ).mixColumns.shiftRows.subBytes) b)
 
 --inverso AES 128 bits
+--recebe chave e bloco de 128 bits no formato de uma matriz e encripta
 aesInv :: String -> [[[Int]]] -> [[[Int]]]
 aesInv k b = addRoundKey k 0 $ snd $ last $ take 10 temp
     where temp = (10,(subBytesInv.shiftRowsInv.(addRoundKey k 10)) b) : map prox temp
           prox :: (Int,[[[Int]]]) -> (Int,[[[Int]]])
           prox (i,b) = (i-1, (subBytesInv.shiftRowsInv.mixColumnsInv.(addRoundKey k (i-1))) b)
 
+--Funçõs para codificar e decodificar Strings
+--Apenas aceitando mensagens de exatamente 16 bytes (tamanho do bloco AES)
+--Faltou implementar modo de operação para aplicar a cifra de bloco em mensagens maiores e uma adaptação para aceitar mensagens menores
 encode :: String -> String -> String
 encode k m = map bin2char $ concat $ transpose $ aes k $ (transpose.toMatrix) $ map char2bin m
 
